@@ -69,12 +69,14 @@ struct ContentView: View {
                     .padding()
             }
         }.onAppear(perform: {() -> () in
+#if !os(macOS)
             do {
                 let session = AVAudioSession.sharedInstance()
                 try session.setCategory(.playAndRecord, mode: .default)
             } catch {
                 whisperState.state = MyState.errorRecording(error.localizedDescription)
             }
+#endif
         })
     }
 }

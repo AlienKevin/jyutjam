@@ -61,6 +61,7 @@ class WhisperState: NSObject, ObservableObject, AVAudioRecorderDelegate {
     }
     
     func startRecording(toOutputFile url: URL, delegate: AVAudioRecorderDelegate?) throws {
+#if !os(macOS)
         let session = AVAudioSession.sharedInstance()
         try session.setActive(true)
         session.requestRecordPermission() { allowed in
@@ -70,6 +71,11 @@ class WhisperState: NSObject, ObservableObject, AVAudioRecorderDelegate {
                 }
             }
         }
+#else
+        if self.recorder?.record() == false {
+            self.state = MyState.errorRecording("Failed to record")
+        }
+#endif
     }
     
     func stopRecording() {
