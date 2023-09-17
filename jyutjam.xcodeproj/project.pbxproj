@@ -17,7 +17,6 @@
 		0AA751482953AC2E001EE061 /* samples in Resources */ = {isa = PBXBuildFile; fileRef = 0AA751462953AC2E001EE061 /* samples */; };
 		0AA751492953AC2E001EE061 /* models in Resources */ = {isa = PBXBuildFile; fileRef = 0AA751472953AC2E001EE061 /* models */; };
 		0AA7514C2953B569001EE061 /* RiffWaveUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA7514B2953B569001EE061 /* RiffWaveUtils.swift */; };
-		0AA7514E2953D958001EE061 /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA7514D2953D958001EE061 /* Recorder.swift */; };
 		0AAC5D9B29539CCF003032C3 /* JyutJamApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AAC5D9A29539CCF003032C3 /* JyutJamApp.swift */; };
 		0AAC5D9D29539CCF003032C3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AAC5D9C29539CCF003032C3 /* ContentView.swift */; };
 		0AAC5D9F29539CD0003032C3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0AAC5D9E29539CD0003032C3 /* Assets.xcassets */; };
@@ -43,7 +42,6 @@
 		0AA751462953AC2E001EE061 /* samples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = samples; sourceTree = "<group>"; };
 		0AA751472953AC2E001EE061 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
 		0AA7514B2953B569001EE061 /* RiffWaveUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiffWaveUtils.swift; sourceTree = "<group>"; };
-		0AA7514D2953D958001EE061 /* Recorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
 		0AAC5D9729539CCF003032C3 /* jyutjam.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = jyutjam.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AAC5D9A29539CCF003032C3 /* JyutJamApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JyutJamApp.swift; sourceTree = "<group>"; };
 		0AAC5D9C29539CCF003032C3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -114,7 +112,6 @@
 			isa = PBXGroup;
 			children = (
 				0AA7514B2953B569001EE061 /* RiffWaveUtils.swift */,
-				0AA7514D2953D958001EE061 /* Recorder.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -272,7 +269,6 @@
 				0A6F1F2D2AB630110076A23C /* ggml-alloc.c in Sources */,
 				0A6F1F2A2AB62FB70076A23C /* whisper-decoder-impl.m in Sources */,
 				0A6F1F272AB62FB70076A23C /* whisper.cpp in Sources */,
-				0AA7514E2953D958001EE061 /* Recorder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

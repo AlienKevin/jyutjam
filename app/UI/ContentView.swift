@@ -8,12 +8,12 @@ struct ContentView: View {
         switch whisperState.state {
         case .errorLoadingModel:
             return AnyView(Text("Error loading model"))
-        case .errorRecording:
-            return AnyView(Text("Error recording"))
+        case .errorRecording(let err):
+            return AnyView(Text("Error recording: " + err))
         case .errorLoadingSample:
             return AnyView(Text("Error loading sample"))
-        case .errorTranscribing:
-            return AnyView(Text("Error transcribing"))
+        case .errorTranscribing(let err):
+            return AnyView(Text("Error transcribing " + err))
         case .recording:
             return AnyView(Text("Recording..."))
         case .transcribed(let text):
@@ -39,9 +39,17 @@ struct ContentView: View {
         NavigationStack {
             VStack {
                 HStack {
-                    Button("Transcribe", action: {
+                    Button("Transcribe1", action: {
                         Task {
-                            await whisperState.transcribeSample()
+                            await whisperState.transcribeSample1()
+                        }
+                    })
+                    .buttonStyle(.bordered)
+                    .disabled(!transcribeEnabled)
+                    
+                    Button("Transcribe2", action: {
+                        Task {
+                            await whisperState.transcribeSample2()
                         }
                     })
                     .buttonStyle(.bordered)
@@ -60,7 +68,14 @@ struct ContentView: View {
                     .navigationTitle("Jyut Jam")
                     .padding()
             }
-        }
+        }.onAppear(perform: {() -> () in
+            do {
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(.playAndRecord, mode: .default)
+            } catch {
+                whisperState.state = MyState.errorRecording(error.localizedDescription)
+            }
+        })
     }
 }
 

@@ -1,12 +1,16 @@
 import Foundation
+import AVFAudio
 
 func decodeWaveFile(_ url: URL) throws -> [Float] {
-    let data = try Data(contentsOf: url)
-    let floats = stride(from: 44, to: data.count, by: 2).map {
-        return data[$0..<$0 + 2].withUnsafeBytes {
-            let short = Int16(littleEndian: $0.load(as: Int16.self))
-            return max(-1.0, min(Float(short) / 32767.0, 1.0))
-        }
-    }
-    return floats
+    let file = try AVAudioFile(forReading: url)
+
+    let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: file.fileFormat.sampleRate, channels: file.fileFormat.channelCount, interleaved: false)
+
+    let buffer: AVAudioPCMBuffer
+    buffer = AVAudioPCMBuffer(pcmFormat: format!, frameCapacity: AVAudioFrameCount(file.length))!
+    try file.read(into: buffer)
+
+    let floatArray = Array(UnsafeBufferPointer(start: buffer.floatChannelData?[0], count: Int(buffer.frameLength)))
+
+    return floatArray
 }

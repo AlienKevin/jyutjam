@@ -32,9 +32,11 @@ actor WhisperContext {
             params.language = en
             params.n_threads = Int32(maxThreads)
             params.split_on_word = true
-//            params.greedy.best_of = 5
+            params.greedy.best_of = 5
             params.token_timestamps = true
             params.max_len = 1
+            params.no_context = true
+            params.logprob_thold = -1.0
             
             whisper_reset_timings(context)
             print("About to run whisper_full")

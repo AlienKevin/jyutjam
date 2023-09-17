@@ -7,9 +7,9 @@ enum MyState: Equatable {
     case errorLoadingModel
     case errorLoadingSample
     case recording
-    case errorRecording
+    case errorRecording(String)
     case recorded(URL)
-    case errorTranscribing
+    case errorTranscribing(String)
     case transcribed(String)
 }
 
@@ -18,15 +18,20 @@ class WhisperState: NSObject, ObservableObject, AVAudioRecorderDelegate {
     @Published var state = MyState.loadingModel
     
     private var whisperContext: WhisperContext?
-    private let recorder = Recorder()
+    private var recorder: AVAudioRecorder?
     private var audioPlayer: AVAudioPlayer?
+    private var recordingUrl: URL?;
     
     private var modelUrl: URL? {
         Bundle.main.url(forResource: "ggml-small", withExtension: "bin", subdirectory: "models")
     }
     
-    private var sampleUrl: URL? {
+    private var sampleUrl1: URL? {
         Bundle.main.url(forResource: "cyunsyutzung", withExtension: "wav", subdirectory: "samples")
+    }
+    
+    private var sampleUrl2: URL? {
+        Bundle.main.url(forResource: "neihaidou", withExtension: "wav", subdirectory: "samples")
     }
     
     private enum LoadError: Error {
@@ -35,7 +40,40 @@ class WhisperState: NSObject, ObservableObject, AVAudioRecorderDelegate {
     
     override init() {
         super.init()
-        loadModel()
+        do {
+            self.recordingUrl = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+                .appending(path: "output.wav")
+            
+            loadModel()
+            
+            let recordSettings: [String : Any] = [
+                AVFormatIDKey: Int(kAudioFormatLinearPCM),
+                AVSampleRateKey: 16000.0,
+                AVNumberOfChannelsKey: 1,
+                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            ]
+            recorder = try AVAudioRecorder(url: self.recordingUrl!, settings: recordSettings)
+            recorder?.delegate = self
+        } catch {
+            print(error)
+            state = MyState.errorRecording(error.localizedDescription)
+        }
+    }
+    
+    func startRecording(toOutputFile url: URL, delegate: AVAudioRecorderDelegate?) throws {
+        let session = AVAudioSession.sharedInstance()
+        try session.setActive(true)
+        session.requestRecordPermission() { allowed in
+            if allowed {
+                if self.recorder?.record() == false {
+                    self.state = MyState.errorRecording("Failed to record")
+                }
+            }
+        }
+    }
+    
+    func stopRecording() {
+        recorder?.stop()
     }
     
     private func loadModel() {
@@ -51,9 +89,18 @@ class WhisperState: NSObject, ObservableObject, AVAudioRecorderDelegate {
         }
     }
     
-    func transcribeSample() async {
-        if let sampleUrl {
-            state = MyState.recorded(sampleUrl)
+    func transcribeSample1() async {
+        if let sampleUrl1 {
+            state = MyState.recorded(sampleUrl1)
+            await transcribeAudio()
+        } else {
+            state = MyState.errorLoadingSample
+        }
+    }
+    
+    func transcribeSample2() async {
+        if let sampleUrl2 {
+            state = MyState.recorded(sampleUrl2)
             await transcribeAudio()
         } else {
             state = MyState.errorLoadingSample
@@ -74,48 +121,30 @@ class WhisperState: NSObject, ObservableObject, AVAudioRecorderDelegate {
             let text = await whisperContext.getTranscription()
             state = MyState.transcribed(text)
         } catch {
-            state = MyState.errorTranscribing
+            state = MyState.errorTranscribing(error.localizedDescription)
         }
     }
     
     private func readAudioSamples(_ url: URL) throws -> [Float] {
-        stopPlayback()
-        try startPlayback(url)
+//        stopPlayback()
+//        try startPlayback(url)
         return try decodeWaveFile(url)
     }
     
     func toggleRecord() async {
-        do {
-            let url = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-                .appending(path: "output.wav")
-            if case MyState.recording = state {
-                await recorder.stopRecording()
-                state = MyState.recorded(url)
-                await transcribeAudio()
-            } else {
-                requestRecordPermission { granted in
-                    if granted {
-                        Task {
-                            self.stopPlayback()
-                            try await self.recorder.startRecording(toOutputFile: url, delegate: self)
-                            self.state = MyState.recording
-                        }
-                    }
-                }
+        if case MyState.recording = state {
+            stopRecording()
+            state = MyState.recorded(recordingUrl!)
+            await transcribeAudio()
+        } else {
+//         self.stopPlayback()
+            do {
+                try startRecording(toOutputFile: self.recordingUrl!, delegate: self)
+                self.state = MyState.recording
+            } catch {
+                self.state = MyState.errorRecording(error.localizedDescription)
             }
-        } catch {
-            self.state = MyState.errorRecording
         }
-    }
-    
-    private func requestRecordPermission(response: @escaping (Bool) -> Void) {
-#if os(macOS)
-        response(true)
-#else
-        AVAudioSession.sharedInstance().requestRecordPermission { granted in
-            response(granted)
-        }
-#endif
     }
     
     private func startPlayback(_ url: URL) throws {
@@ -139,7 +168,7 @@ class WhisperState: NSObject, ObservableObject, AVAudioRecorderDelegate {
     }
     
     private func handleRecError(_ error: Error) {
-        state = MyState.errorRecording
+        state = MyState.errorRecording(error.localizedDescription)
     }
     
     nonisolated func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
@@ -149,6 +178,6 @@ class WhisperState: NSObject, ObservableObject, AVAudioRecorderDelegate {
     }
     
     private func onDidFinishRecording() {
-        // TODO
+        state = MyState.recorded(recordingUrl!)
     }
 }
