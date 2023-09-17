@@ -23,18 +23,18 @@ actor WhisperContext {
         var params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY)
         "en".withCString { en in
             // Adapted from whisper.objc
-            params.print_realtime = true
+            params.print_realtime = false
             params.print_progress = false
-            params.print_timestamps = true
             params.print_special = false
+            params.print_timestamps = false
+            params.single_segment = false
             params.translate = false
             params.language = en
             params.n_threads = Int32(maxThreads)
-            params.offset_ms = 0
-            params.no_context = true
-            params.single_segment = false
-            params.greedy.best_of = 5
+            params.split_on_word = true
+//            params.greedy.best_of = 5
             params.token_timestamps = true
+            params.max_len = 1
             
             whisper_reset_timings(context)
             print("About to run whisper_full")
@@ -48,9 +48,20 @@ actor WhisperContext {
         }
     }
     
+    func millisecondsToTimestamp(_ milliseconds: Int64) -> String {
+        let hours = (milliseconds / (1000 * 60 * 60)) % 24
+        let minutes = (milliseconds / (1000 * 60)) % 60
+        let seconds = (milliseconds / 1000) % 60
+        let millis = milliseconds % 1000
+
+        let formattedString = String(format: "%02d:%02d:%02d.%03d", hours, minutes, seconds, millis)
+        return formattedString
+    }
+    
     func getTranscription() -> String {
         var transcription = ""
         for i in 0..<whisper_full_n_segments(context) {
+            print(millisecondsToTimestamp(whisper_full_get_segment_t0(context, i)) + " -> " + millisecondsToTimestamp(whisper_full_get_segment_t1(context, i)) + ": " + String.init(cString: whisper_full_get_segment_text(context, i)).trimmingCharacters(in: .whitespacesAndNewlines))
             transcription += String.init(cString: whisper_full_get_segment_text(context, i))
         }
         return transcription
